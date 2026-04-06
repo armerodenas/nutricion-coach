@@ -1550,9 +1550,12 @@ const GEMINI_KEY = 'AIzaSyAMfwx6sWWHF_zt1YuWjLtv3jJUnjZEcDY';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
 
 async function callClaude(system, userContent, maxTokens = 500) {
-  // Build Gemini parts from userContent array or string
   const parts = [];
   const contentArr = Array.isArray(userContent) ? userContent : [{ type:'text', text: userContent }];
+
+  // System prompt as first text part
+  parts.push({ text: system + '\n\n' });
+
   for (const item of contentArr) {
     if (item.type === 'text') {
       parts.push({ text: item.text });
@@ -1560,22 +1563,26 @@ async function callClaude(system, userContent, maxTokens = 500) {
       parts.push({ inlineData: { mimeType: item.source.media_type, data: item.source.data } });
     }
   }
-  // Prepend system prompt as first text part
-  parts.unshift({ text: system });
 
-  return fetch(GEMINI_URL, {
+  const resp = await fetch(GEMINI_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts }],
+      contents: [{ role: 'user', parts }],
       generationConfig: { maxOutputTokens: maxTokens, temperature: 0.3 }
     })
-  }).then(async r => {
-    const d = await r.json();
-    // Normalize response to match Anthropic format expected by callers
-    const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return { json: async () => ({ content: [{ type:'text', text }] }) };
   });
+
+  const d = await resp.json();
+
+  if (d.error) throw new Error(d.error.message);
+
+  const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+  // Return object with .json() method to match Anthropic format
+  return {
+    json: async () => ({ content: [{ type: 'text', text }] })
+  };
 }
 let profileSelections = { sex:'male', goal:'recomp', prot:'2.0', activity:'1.55' };
 
