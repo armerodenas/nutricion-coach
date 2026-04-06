@@ -1092,7 +1092,7 @@ Analiza la imagen y extrae todos los datos visibles. Responde SOLO con JSON sin 
       saveState();
       loadGarminDisplay();
     } catch(err) {
-      alert('No se pudo leer la captura. Inténtalo de nuevo.'); console.error(err);
+      alert('Error Garmin: ' + err.message); console.error(err);
     } finally {
       document.getElementById('loadingOverlay').classList.remove('active');
       event.target.value = '';
@@ -1267,7 +1267,7 @@ Responde SOLO con JSON sin markdown: {"name":"nombre max 3 palabras","kcal":núm
     document.getElementById('resultCoach').textContent = result.coach;
     document.getElementById('resultCard').classList.add('active');
   } catch(err) {
-    alert('Error al analizar. Inténtalo de nuevo.'); console.error(err);
+    alert('Error: ' + err.message); console.error(err);
   } finally {
     document.getElementById('loadingOverlay').classList.remove('active');
     document.getElementById('btnAnalyze').disabled = false;
